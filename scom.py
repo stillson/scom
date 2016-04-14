@@ -80,8 +80,6 @@ def scom_init(blah):
     gMyKey    = gKeystore.getMine()
     gDhMaster = DHMaster()
 
-
-
 class ScomSock(object):
     tagfmt = '!BBH'
 
@@ -295,6 +293,8 @@ class ScomTransferSock(object):
         self.outkey  = None
         self.outhmac = None
         self.sock    = sock
+        self.hashin  = None
+        self.hashout = None
         raise Exception('virtual base class')
 
     # TAG SUPPORT FUNCTIONS
@@ -330,9 +330,8 @@ class ScomTransferSock(object):
         alg = AES.new(self.outkey, AES.MODE_CBC, iv)
         edata = iv + alg.encrypt(pdata)
         # hmac
-        h = HMAC.new(self.outhmac, digestmod=SHA256)
-        h.update(edata)
-        tag = h.digest()
+        self.hashout.update(edata)
+        tag = self.hashout.digest()
 
         odata = tag + edata
         # send
@@ -353,9 +352,8 @@ class ScomTransferSock(object):
         #verify hastag
         htag = idata[:32]
         idata = idata[32:]
-        h = HMAC.new(self.inhmac, digestmod=SHA256)
-        h.update(idata)
-        if h.digest() != htag:
+        self.hashin.update(idata)
+        if self.hashin.digest() != htag:
             raise Exception('invalid hash')
 
         #decrypt
@@ -398,6 +396,8 @@ class ScomCliSock(ScomTransferSock):
         setval(self, 'outhmac', key.auth_to_serv)
         setval(self, 'inkey', key.enc_to_cli)
         setval(self, 'inhmac', key.auth_to_cli)
+        setval(self, 'hashin', HMAC.new(self.inhmac, digestmod=SHA256))
+        setval(self, 'hashout', HMAC.new(self.outhmac, digestmod=SHA256))
 
 class ScomSrvSock(ScomTransferSock):
     def __init__(self, sock, key):
@@ -411,6 +411,8 @@ class ScomSrvSock(ScomTransferSock):
         setval(self, 'inhmac', key.auth_to_serv)
         setval(self, 'outkey', key.enc_to_cli)
         setval(self, 'outhmac', key.auth_to_cli)
+        setval(self, 'hashin', HMAC.new(self.inhmac, digestmod=SHA256))
+        setval(self, 'hashout', HMAC.new(self.outhmac, digestmod=SHA256))
 
 if __name__ == '__main__':
     import socket
@@ -447,6 +449,7 @@ if __name__ == '__main__':
             s = ScomSock(socket.socket(socket.AF_UNIX))
             s.connect(address)
             s.send("this is a test")
+            print s.recv(100)
             s.send('-' * 10000)
             print s.recv(100)
         elif '-s' in sys.argv:
@@ -464,6 +467,7 @@ if __name__ == '__main__':
                 print conn.recv(100)
                 conn.send('yet another test')
                 print len(conn.recv(100000))
+                conn.send('more test')
                 print 'done'
                 conn.close()
 

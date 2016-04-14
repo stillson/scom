@@ -63,5 +63,3 @@ def get_iv():
 def byte_time():
     return unhexlify('%x' % get_time())
 
-
-
