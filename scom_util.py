@@ -7,6 +7,9 @@ r = Random()
 def get_time():
     return int(time())
 
+def byte_time():
+    return unhexlify('%x' % get_time())
+
 # works on mpz too
 def int_to_bytes(int):
     s = '%x' % int
@@ -20,6 +23,7 @@ def clean_unhexlify(s):
 def bytes_to_int(bytes):
     return int(hexlify(bytes), 16)
 
+# various clases to group values
 class FreeHolder(object):
     def __init__(self, *args):
         if len(args) == 1:
@@ -51,6 +55,7 @@ class IHolder(Holder):
             raise KeyError
         self.__dict__[arg] = val
 
+# crypto support
 def pad(a_str, block_size):
     # pad out to block len, unsing pkcs7
     pad_len     = block_size - (len(a_str) % block_size)
@@ -58,12 +63,12 @@ def pad(a_str, block_size):
 
 def depad(a_str):
     padlen = ord(a_str[-1])
+    if padlen > 16:
+        raise Exception('Bad Padding')
     return a_str[:-padlen]
 
 def get_iv():
     # returns random IV
     return unhexlify('%032x' % r.getrandbits(128))
 
-def byte_time():
-    return unhexlify('%x' % get_time())
 

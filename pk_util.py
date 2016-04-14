@@ -193,27 +193,40 @@ KeyStore = KeyStore_Dir
 ### Tests ###
 
 if __name__ == '__main__':
-    a = KeyStore()
+    import sys
+    if '-g' in sys.argv:
+        def save_json_file(key, name):
+            with open(name, 'w') as f:
+                json.dump([key.id, key.pem], f, indent=4)
 
-    print 'mine'
-    mine = newRSAKey()
-    print 'other1'
-    other1 = newRSAKey(False)
-    print 'other2'
-    other2 = newRSAKey(False)
+        privkey = newRSAKey()
+        pubRkey = privkey.key.publickey()
+        pubkey = FullRSAKey(privkey.id, pubRkey, pubRkey.exportKey())
+        save_json_file(privkey, 'scom_id.%s' % privkey.id)
+        save_json_file(pubkey,  '%s.scom'    % pubkey.id)
 
-    a.setMine(mine)
-    a[other1.id] = other1
-    a[other2.id] = other2
+    else:
+        a = KeyStore()
 
-    a.saveStore()
+        print 'mine'
+        mine = newRSAKey()
+        print 'other1'
+        other1 = newRSAKey(False)
+        print 'other2'
+        other2 = newRSAKey(False)
 
-    a.loadStore()
+        a.setMine(mine)
+        a[other1.id] = other1
+        a[other2.id] = other2
 
-    print a.getMine()
+        a.saveStore()
 
-    print
+        a.loadStore()
 
-    for k,v in a.items():
-        print k
-        print v
+        print a.getMine()
+
+        print
+
+        for k,v in a.items():
+            print k
+            print v

@@ -7,6 +7,7 @@ from collections import namedtuple
 from hashlib import pbkdf2_hmac
 from binascii import unhexlify,hexlify
 from scom_util import get_time
+
 DHOffer = namedtuple('DHOffer', 'time a ga gen prime')
 Keys    = namedtuple('Keys', 'enc_to_serv auth_to_serv enc_to_cli auth_to_cli')
 r       = Random()

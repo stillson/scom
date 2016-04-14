@@ -9,11 +9,11 @@ from binascii import unhexlify
 
 VSEP = '####'
 
-
 # Experimental. Depends on faking an OID...
 # use an HMAC for signature to avoid problems with collisions
-#HMAC_MIT = None
-HMAC_MIT = unhexlify('2d20fa92741ab59b4bab87dd197dfef0840ee0d1dc2b9da3822592dd4363a818')
+HMAC_MIT = None
+# best to specify this in config file
+#HMAC_MIT = unhexlify('2d20fa92741ab59b4bab87dd197dfef0840ee0d1dc2b9da3822592dd4363a818')
 FAKE_OID = unhexlify('2a864e87850e0209')
 
 def sign_msg(key, msg):
