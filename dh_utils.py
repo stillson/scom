@@ -11,14 +11,17 @@ DHOffer = namedtuple('DHOffer', 'time a ga gen prime')
 Keys    = namedtuple('Keys', 'enc_to_serv auth_to_serv enc_to_cli auth_to_cli')
 r       = Random()
 
-class DH_Consts:
-    bits = 1500
-    glen = 128
-    regen_time = 86400
-    #4 keys, 256 bits long, in bytes
-    keylen = 4 * 256 / 8
-    salt = unhexlify('21937ea4c05f2266ef0c40b9ae620bdd')
-    iters = 2
+class DH_Consts_class:
+    def __init__(self):
+        self.bits = 1500
+        self.glen = 128
+        self.regen_time = 86400
+        #4 keys, 256 bits long, in bytes
+        self.keylen = 4 * 256 / 8
+        self.salt = unhexlify('21937ea4c05f2266ef0c40b9ae620bdd')
+        self.iters = 2
+
+DH_Consts = DH_Consts_class()
 
 def get_ga(a, gen, prime):
     return gmpy2.powmod(mpz(gen), mpz(a), mpz(prime))

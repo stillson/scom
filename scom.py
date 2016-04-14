@@ -2,14 +2,16 @@
 
 import struct
 import sys
-from scom_util import get_time, Holder, IHolder, pad, depad, get_iv, byte_time
+from scom_util import get_time, Holder, IHolder, pad, depad, get_iv, byte_time, clean_unhexlify
 from scom_util import int_to_bytes as ib
 from scom_util import bytes_to_int as bi
-from binascii import unhexlify
 from pk_util import KeyStore
+import pk_util
 from dh_utils import DHMaster, DHClient
 from kex_util import sign_offer, sign_response, verify_offer, verify_response
+import kex_util
 from dh_utils import DHOffer
+import dh_utils
 from Crypto.Hash import SHA256, HMAC
 from Crypto.Cipher import AES
 import ConfigParser
@@ -51,32 +53,46 @@ gKeystore    = None
 gMyKey       = None
 gDhMaster    = None
 
-def scom_init(blah):
+def scom_init(cf_file='./scom.cfg'):
     gInitialized = True
     config = ConfigParser.RawConfigParser()
 
-    if os.path.exists('./scom.cfg'):
-        config.read('scom.cfg')
+    if os.path.exists(cf_file):
+        config.read(cf_file)
     elif os.path.exists('/etc/scom/scom.cfg'):
         config.read('/etc/scom/scom.cfg')
+    else:
+        config = None
 
-    #read in some kind of configs
-    if config.has_section('KEY_STORE'):
-        # store type
-        # store localtion
-        pass
-    if config.has_section('DH_CONSTS'):
-        # DH consts
-        pass
-    # kex-> HMAC_MIT
-    if config.has_section('KEY_EX'):
-        # kex-> HMAC_MIT
-        pass
-    if config.has_section('CONSOLE'):
-        # console
-        pass
+    store_location = None
+    if config:
+        #read in some kind of configs
+        if config.has_section('KEY_STORE'):
+            if config.has_option('KEY_STORE', 'json_file_store'):
+                pk_util.KeyStore = pk_util.KeyStore_JSON
+            elif config.has_option('KEY_STORE', 'etc_dir_store'):
+                pk_util.KeyStore = pk_util.KeyStore_Dir
+            if config.has_option('KEY_STORE', 'store_location'):
+                store_location = config.get('KEY_STORE', 'store_location')
+        if config.has_section('DH_CONSTS'):
+            if config.has_option('DH_CONSTS', 'bits'):
+                dh_utils.DH_Consts.bits = config.getint('DH_CONSTS', 'bits')
+            if config.has_option('DH_CONSTS', 'regen_time'):
+                dh_utils.DH_Consts.bits = config.getint('DH_CONSTS', 'regen_time')
+            if config.has_option('DH_CONSTS', 'generator_bits'):
+                dh_utils.DH_Consts.bits = config.getint('DH_CONSTS', 'generator_bits')
+            if config.has_option('DH_CONSTS', 'salt'):
+                dh_utils.DH_Consts.salt = clean_unhexlify(config.get('DH_CONSTS', 'salt'))
+        if config.has_section('KEY_EX'):
+            if config.has_option('KEY_EX', 'hmac_mitigation'):
+                kex_util.HMAC_MIT = clean_unhexlify(config.get('KEY_EX', 'hmac_mitigation'))
+        if config.has_section('CONSOLE'):
+            pass
 
-    gKeystore = KeyStore()
+    if store_location:
+        gKeystore = KeyStore(store_location)
+    else:
+        gKeystore = KeyStore()
     gMyKey    = gKeystore.getMine()
     gDhMaster = DHMaster()
 
@@ -446,6 +462,8 @@ if __name__ == '__main__':
     if True:
         address = '/tmp/scom_test'
         if '-c' in sys.argv:
+            #scom_init('scom-2.cfg')
+            scom_init('')
             s = ScomSock(socket.socket(socket.AF_UNIX))
             s.connect(address)
             s.send("this is a test")
@@ -453,6 +471,7 @@ if __name__ == '__main__':
             s.send('-' * 10000)
             print s.recv(100)
         elif '-s' in sys.argv:
+            scom_init()
             s = ScomSock(socket.socket(socket.AF_UNIX))
             try:
                 import os
@@ -463,13 +482,18 @@ if __name__ == '__main__':
             s.bind('/tmp/scom_test')
             s.listen(2)
             while True:
-                conn, addr = s.accept()
-                print conn.recv(100)
-                conn.send('yet another test')
-                print len(conn.recv(100000))
-                conn.send('more test')
-                print 'done'
-                conn.close()
+                try:
+                    conn, addr = s.accept()
+                    print conn.recv(100)
+                    conn.send('yet another test')
+                    print len(conn.recv(100000))
+                    conn.send('more test')
+                    print 'done'
+                    conn.close()
+                except KeyboardInterrupt:
+                    sys.exit()
+                except:
+                    pass
 
 
 

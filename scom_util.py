@@ -13,6 +13,10 @@ def int_to_bytes(int):
     if len(s) % 2 == 1: s = '0' + s
     return unhexlify(s)
 
+def clean_unhexlify(s):
+    if len(s) % 2 == 1: s = '0' + s
+    return unhexlify(s)
+
 def bytes_to_int(bytes):
     return int(hexlify(bytes), 16)
 
