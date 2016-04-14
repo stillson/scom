@@ -382,7 +382,6 @@ class ScomSrvSock(ScomTransferSock):
         setval(self, 'hashin', HMAC.new(self.inhmac, digestmod=SHA256))
         setval(self, 'hashout', HMAC.new(self.outhmac, digestmod=SHA256))
 
-
 if __name__ == '__main__':
     import socket
     import threading
