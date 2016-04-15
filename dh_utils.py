@@ -30,20 +30,30 @@ def get_ga(a, gen, prime):
 def get_gab(ga,b, prime):
     return gmpy2.powmod(mpz(ga), mpz(b), mpz(prime))
 
+"""
+Generating a 2n+1 prime is sloooooow
+need to do this
+1) ahead of time, possibly caching
+2) keep a good supply around
+3) but, it makes generators a lot easier (not even, not p)
+"""
 def new_prime():
-    np = mpz(r.getrandbits(DH_Consts.bits))
+    np = mpz(r.getrandbits(DH_Consts.bits - 1))
     np = gmpy2.next_prime(np)
 
-    while not gmpy2.is_prime(np, 40):
+    while not gmpy2.is_prime(2 * np + 1, 25):
         np = gmpy2.next_prime(np)
 
-    return mpz(np)
+    return mpz(2 * np + 1)
 
 def new_gen():
     ng = mpz(0)
     num_ones = r.randint(3,15)
     for _ in range(num_ones):
-        ng = ng.bit_set(r.randint(0,DH_Consts.glen))
+        ng = ng.bit_set(r.randint(3,DH_Consts.glen))
+
+    # make it odd
+    ng += 1
 
     return mpz(ng)
 
@@ -139,6 +149,16 @@ class DHClient:
         return self.keys
 
 if __name__ == '__main__':
+    if True:
+        print 1
+        np = new_prime()
+        print 2
+        ng = new_gen()
+        print 3
+        print np
+        print hex(np)
+        print hex(ng)
+
     if False:
         np = new_prime()
         ng = new_gen()
@@ -168,7 +188,7 @@ if __name__ == '__main__':
         print '=' * 40
         print gab1 - gab2
 
-    if True:
+    if False:
         import sys
 
         sys.stderr.write('a\n')
