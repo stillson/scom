@@ -53,7 +53,7 @@ gKeystore    = None
 gMyKey       = None
 gDhMaster    = None
 
-def scom_init(cf_file='./scom.cfg'):
+def scom_init(cf_file='./scom.cfg', client_only=False):
     gInitialized = True
     config = ConfigParser.RawConfigParser()
 
@@ -94,19 +94,20 @@ def scom_init(cf_file='./scom.cfg'):
     else:
         gKeystore = KeyStore()
     gMyKey    = gKeystore.getMine()
-    gDhMaster = DHMaster()
+    if not client_only:
+        gDhMaster = DHMaster()
 
 class ScomSock(object):
     tagfmt = '!BBH'
 
     # only data moving methods send and recv
-    def __init__(self, sock):
+    def __init__(self, sock)
         self.sock = sock
         self.state = ScomTags.NONE
         self.store = KeyStore()
         self.store.loadStore()
         self.my_key = self.store.getMine()
-        self.dh_master = DHMaster()
+        self.dh_master = gDhMaster()
         self.keys = None
 
     # generally be the sock
